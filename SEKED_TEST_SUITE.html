@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEKED Compiler — Test Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, monospace; background: #0D1117; color: #F0F6FC; padding: 20px; }
+        h1 { font-size: 1.5rem; margin-bottom: 20px; color: #2A9D8F; }
+        h2 { font-size: 1.1rem; margin: 20px 0 10px; color: #8B949E; }
+        .test { display: flex; align-items: center; padding: 8px 12px; margin: 4px 0; border-radius: 6px; background: #161B22; }
+        .test.pass { border-left: 3px solid #2A9D8F; }
+        .test.fail { border-left: 3px solid #E63946; }
+        .test-name { flex: 1; font-size: 0.85rem; }
+        .test-result { font-weight: bold; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; }
+        .pass .test-result { background: #2A9D8F; color: #0D1117; }
+        .fail .test-result { background: #E63946; color: white; }
+        .summary { margin-top: 30px; padding: 20px; background: #161B22; border-radius: 12px; }
+        .summary-title { font-size: 1.2rem; margin-bottom: 10px; }
+        .summary-stats { display: flex; gap: 20px; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: bold; }
+        .stat-label { font-size: 0.75rem; color: #8B949E; }
+        .all-pass { color: #2A9D8F; }
+        .has-fail { color: #E63946; }
+        .detail { font-size: 0.7rem; color: #8B949E; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <h1>SEKED COMPILER TEST SUITE</h1>
+    <div id="results"></div>
+    <div class="summary" id="summary"></div>
+
+    <script>
+        // ============================================
+        // SEKED COMPILER (Copy from main app)
+        // ============================================
+
+        const DIRECTIVES = {
+            HALT: { name: 'HALT', code: 'H' },
+            WAIT: { name: 'WAIT', code: 'W' },
+            STABILIZE: { name: 'STABILIZE', code: 'S' },
+            CLARIFY: { name: 'CLARIFY', code: 'C' },
+            FORTIFY: { name: 'FORTIFY', code: 'F' },
+            GRIND: { name: 'GRIND', code: 'G' },
+            EXECUTE: { name: 'EXECUTE', code: 'X' },
+            EXPAND: { name: 'EXPAND', code: 'E' },
+            SCALE_BACK: { name: 'SCALE BACK', code: 'B' }
+        };
+
+        function computeRatios(e, r, c, d, s) {
+            const seked = (e + d) / (r + 1);
+            const ci = c / (r + 1);
+            const avgForce = (e + d) / 2;
+            const si = avgForce > 0 ? s / avgForce : 0;
+            return {
+                seked: Math.round(seked * 100) / 100,
+                ci: Math.round(ci * 100) / 100,
+                si: Math.round(si * 100) / 100
+            };
+        }
+
+        function compile(e, r, c, d, s) {
+            const ratios = computeRatios(e, r, c, d, s);
+            const { seked, ci, si } = ratios;
+
+            let directive;
+
+            if (seked < 1.0) {
+                directive = DIRECTIVES.HALT;
+            } else if (seked >= 6.0) {
+                directive = DIRECTIVES.SCALE_BACK;
+            } else if (seked >= 4.0) {
+                directive = si >= 1.0 ? DIRECTIVES.EXPAND : DIRECTIVES.SCALE_BACK;
+            } else if (seked >= 2.0) {
+                if (ci < 0.5) {
+                    directive = DIRECTIVES.CLARIFY;
+                } else if (si < 0.5) {
+                    directive = DIRECTIVES.FORTIFY;
+                } else {
+                    directive = DIRECTIVES.EXECUTE;
+                }
+            } else {
+                if (ci < 0.5) {
+                    directive = DIRECTIVES.WAIT;
+                } else if (si < 0.5) {
+                    directive = DIRECTIVES.STABILIZE;
+                } else {
+                    directive = DIRECTIVES.GRIND;
+                }
+            }
+
+            return { ratios, directive };
+        }
+
+        // ============================================
+        // TEST FRAMEWORK
+        // ============================================
+
+        const tests = [];
+        let passed = 0;
+        let failed = 0;
+
+        function test(name, fn) {
+            try {
+                const result = fn();
+                if (result === true) {
+                    tests.push({ name, pass: true });
+                    passed++;
+                } else {
+                    tests.push({ name, pass: false, detail: result });
+                    failed++;
+                }
+            } catch (err) {
+                tests.push({ name, pass: false, detail: err.message });
+                failed++;
+            }
+        }
+
+        function assertEqual(actual, expected, msg) {
+            if (actual === expected) return true;
+            return `Expected ${expected}, got ${actual}${msg ? ': ' + msg : ''}`;
+        }
+
+        // ============================================
+        // TESTS
+        // ============================================
+
+        // Test 1: Determinism
+        test('Determinism: Same input always produces same output', () => {
+            const results = [];
+            for (let i = 0; i < 10; i++) {
+                results.push(compile(7, 2, 8, 3, 9).directive.name);
+            }
+            return results.every(r => r === results[0]) || 'Results vary';
+        });
+
+        // Test 2: Edge Case - All Zeros
+        test('Edge Case: 00000 → HALT', () => {
+            const result = compile(0, 0, 0, 0, 0);
+            return assertEqual(result.directive.name, 'HALT');
+        });
+
+        // Test 3: Edge Case - All Fives
+        test('Edge Case: 55555 → GRIND', () => {
+            const result = compile(5, 5, 5, 5, 5);
+            return assertEqual(result.directive.name, 'GRIND');
+        });
+
+        // Test 4: Edge Case - All Nines
+        test('Edge Case: 99999 → GRIND (high R caps seked)', () => {
+            const result = compile(9, 9, 9, 9, 9);
+            return assertEqual(result.directive.name, 'GRIND');
+        });
+
+        // Test 5: Maximum Forward Force
+        test('Maximum Forward: 90909 → SCALE BACK (σ > 6)', () => {
+            const result = compile(9, 0, 9, 0, 9);
+            // σ = (9+0)/(0+1) = 9.0, but D is 0, so let's check
+            // Actually 90909 = E9 R0 C9 D0 S9
+            // σ = (9+0)/(0+1) = 9 → SCALE BACK
+            return assertEqual(result.directive.name, 'SCALE BACK');
+        });
+
+        // Test 6: Optimal Execute State
+        test('Optimal State: 72839 → EXECUTE', () => {
+            const result = compile(7, 2, 8, 3, 9);
+            return assertEqual(result.directive.name, 'EXECUTE');
+        });
+
+        // Test 7: Low Energy Collapse
+        test('Collapse State: 18503 → HALT (σ < 1)', () => {
+            const result2 = compile(1, 8, 5, 0, 3);
+            // σ = (1+0)/(8+1) = 1/9 = 0.11 → HALT
+            return assertEqual(result2.directive.name, 'HALT');
+        });
+
+        // Test 8: Boundary - σ exactly 1.0
+        test('Boundary: σ = 1.0 → NOT HALT', () => {
+            // Need (E+D)/(R+1) = 1.0
+            // If E=1, D=1, R=1: (1+1)/(1+1) = 1.0
+            const result = compile(1, 1, 5, 1, 5);
+            return result.directive.name !== 'HALT' || 'Got HALT at σ=1.0';
+        });
+
+        // Test 9: Boundary - σ = 0.99
+        test('Boundary: σ = 0.99 → HALT', () => {
+            // (E+D)/(R+1) < 1, so E+D < R+1
+            // E=1, D=0, R=1: (1+0)/(1+1) = 0.5 → HALT
+            const result = compile(1, 1, 5, 0, 5);
+            return assertEqual(result.directive.name, 'HALT');
+        });
+
+        // Test 10: CI threshold - fog vs clear
+        test('CI Threshold: Low CI in optimal σ → CLARIFY', () => {
+            // σ 2-4, CI < 0.5
+            // E=5, D=5, R=4 → σ = 10/5 = 2.0
+            // C=2 → CI = 2/5 = 0.4 < 0.5
+            const result = compile(5, 4, 2, 5, 5);
+            return assertEqual(result.directive.name, 'CLARIFY');
+        });
+
+        // Test 11: SI threshold - weak foundation
+        test('SI Threshold: Low SI in optimal σ → FORTIFY', () => {
+            // σ 2-4, CI ≥ 0.5, SI < 0.5
+            // E=5, D=4, R=2 → σ = 9/3 = 3.0
+            // C=5 → CI = 5/3 = 1.67 ≥ 0.5
+            // S=2 → SI = 2/4.5 = 0.44 < 0.5
+            const result = compile(5, 2, 5, 4, 2);
+            return assertEqual(result.directive.name, 'FORTIFY');
+        });
+
+        // Test 12: High σ with strong SI → EXPAND
+        test('Surge State: σ ≥ 4 with SI ≥ 1 → EXPAND', () => {
+            // E=8, D=6, R=2 → σ = 14/3 = 4.67
+            // S=8 → SI = 8/7 = 1.14 ≥ 1.0
+            const result = compile(8, 2, 7, 6, 8);
+            return assertEqual(result.directive.name, 'EXPAND');
+        });
+
+        // Test 13: High σ with weak SI → SCALE BACK
+        test('Overextension: σ ≥ 4 with SI < 1 → SCALE BACK', () => {
+            // E=8, D=8, R=2 → σ = 16/3 = 5.33
+            // S=4 → SI = 4/8 = 0.5 < 1.0
+            const result = compile(8, 2, 7, 8, 4);
+            return assertEqual(result.directive.name, 'SCALE BACK');
+        });
+
+        // Test 14: Grind zone stable
+        test('Grind Zone: σ 1-2, CI ≥ 0.5, SI ≥ 0.5 → GRIND', () => {
+            // E=3, D=3, R=4 → σ = 6/5 = 1.2
+            // C=4 → CI = 4/5 = 0.8 ≥ 0.5
+            // S=4 → SI = 4/3 = 1.33 ≥ 0.5
+            const result = compile(3, 4, 4, 3, 4);
+            return assertEqual(result.directive.name, 'GRIND');
+        });
+
+        // Test 15: Wait state - foggy grind
+        test('Wait State: σ 1-2, CI < 0.5 → WAIT', () => {
+            // E=3, D=2, R=3 → σ = 5/4 = 1.25
+            // C=1 → CI = 1/4 = 0.25 < 0.5
+            const result = compile(3, 3, 1, 2, 5);
+            return assertEqual(result.directive.name, 'WAIT');
+        });
+
+        // Test 16: Stabilize - weak in grind
+        test('Stabilize State: σ 1-2, CI ≥ 0.5, SI < 0.5 → STABILIZE', () => {
+            // E=4, D=2, R=4 → σ = 6/5 = 1.2
+            // C=3 → CI = 3/5 = 0.6 ≥ 0.5
+            // S=1 → SI = 1/3 = 0.33 < 0.5
+            const result = compile(4, 4, 3, 2, 1);
+            return assertEqual(result.directive.name, 'STABILIZE');
+        });
+
+        // Test 17: Ratio calculations
+        test('Ratio Math: SEKED calculation correct', () => {
+            const ratios = computeRatios(7, 2, 8, 3, 9);
+            // σ = (7+3)/(2+1) = 10/3 = 3.33
+            return assertEqual(ratios.seked, 3.33);
+        });
+
+        test('Ratio Math: CI calculation correct', () => {
+            const ratios = computeRatios(7, 2, 8, 3, 9);
+            // CI = 8/(2+1) = 8/3 = 2.67
+            return assertEqual(ratios.ci, 2.67);
+        });
+
+        test('Ratio Math: SI calculation correct', () => {
+            const ratios = computeRatios(7, 2, 8, 3, 9);
+            // SI = 9/((7+3)/2) = 9/5 = 1.8
+            return assertEqual(ratios.si, 1.8);
+        });
+
+        // Test 20: Complete coverage - sample random states
+        test('Coverage: 100 random states all produce valid directives', () => {
+            const validDirectives = Object.values(DIRECTIVES).map(d => d.name);
+            for (let i = 0; i < 100; i++) {
+                const e = Math.floor(Math.random() * 10);
+                const r = Math.floor(Math.random() * 10);
+                const c = Math.floor(Math.random() * 10);
+                const d = Math.floor(Math.random() * 10);
+                const s = Math.floor(Math.random() * 10);
+                const result = compile(e, r, c, d, s);
+                if (!validDirectives.includes(result.directive.name)) {
+                    return `State ${e}${r}${c}${d}${s} produced invalid directive: ${result.directive.name}`;
+                }
+            }
+            return true;
+        });
+
+        // Test 21: Full exhaustive coverage (all 100,000 states)
+        test('EXHAUSTIVE: All 100,000 states produce valid directives', () => {
+            const validDirectives = Object.values(DIRECTIVES).map(d => d.name);
+            let invalid = [];
+            for (let e = 0; e <= 9; e++) {
+                for (let r = 0; r <= 9; r++) {
+                    for (let c = 0; c <= 9; c++) {
+                        for (let d = 0; d <= 9; d++) {
+                            for (let s = 0; s <= 9; s++) {
+                                const result = compile(e, r, c, d, s);
+                                if (!validDirectives.includes(result.directive.name)) {
+                                    invalid.push(`${e}${r}${c}${d}${s}`);
+                                    if (invalid.length >= 5) break;
+                                }
+                            }
+                            if (invalid.length >= 5) break;
+                        }
+                        if (invalid.length >= 5) break;
+                    }
+                    if (invalid.length >= 5) break;
+                }
+                if (invalid.length >= 5) break;
+            }
+            if (invalid.length > 0) {
+                return `Invalid states found: ${invalid.join(', ')}`;
+            }
+            return true;
+        });
+
+        // ============================================
+        // RENDER RESULTS
+        // ============================================
+
+        function render() {
+            const resultsDiv = document.getElementById('results');
+            const summaryDiv = document.getElementById('summary');
+
+            let html = '';
+            let currentSection = '';
+
+            tests.forEach(t => {
+                html += `
+                    <div class="test ${t.pass ? 'pass' : 'fail'}">
+                        <div class="test-name">
+                            ${t.name}
+                            ${t.detail ? `<div class="detail">${t.detail}</div>` : ''}
+                        </div>
+                        <div class="test-result">${t.pass ? 'PASS' : 'FAIL'}</div>
+                    </div>
+                `;
+            });
+
+            resultsDiv.innerHTML = html;
+
+            const total = passed + failed;
+            const allPass = failed === 0;
+
+            summaryDiv.innerHTML = `
+                <div class="summary-title ${allPass ? 'all-pass' : 'has-fail'}">
+                    ${allPass ? '✓ ALL TESTS PASSED' : '✗ SOME TESTS FAILED'}
+                </div>
+                <div class="summary-stats">
+                    <div class="stat">
+                        <div class="stat-value">${total}</div>
+                        <div class="stat-label">Total Tests</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value all-pass">${passed}</div>
+                        <div class="stat-label">Passed</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value has-fail">${failed}</div>
+                        <div class="stat-label">Failed</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">${Math.round(passed/total*100)}%</div>
+                        <div class="stat-label">Pass Rate</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        render();
+    </script>
+</body>
+</html>

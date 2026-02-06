@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SEKED — State Compiler</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --halt: #E63946; --wait: #F4A261; --stabilize: #E9C46A; --clarify: #A8DADC;
+            --fortify: #9B5DE5; --grind: #6C757D; --execute: #2A9D8F; --expand: #00F5D4;
+            --scaleback: #D62828; --bg: #0D1117; --surface: #161B22; --border: #30363D;
+            --text: #F0F6FC; --text-dim: #8B949E;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .app { max-width: 500px; margin: 0 auto; padding: 20px; padding-bottom: 100px; }
+        .header { text-align: center; padding: 30px 0 20px; }
+        .header h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: 8px; }
+        .header .tagline { color: var(--text-dim); font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; }
+        .state-display { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 20px 0; text-align: center; }
+        .state-code { font-family: 'SF Mono', monospace; font-size: 3rem; font-weight: 700; letter-spacing: 12px; margin-bottom: 16px; }
+        .ratios { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+        .ratio { text-align: center; }
+        .ratio-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .ratio-value { font-size: 1.4rem; font-weight: 600; font-family: 'SF Mono', monospace; }
+        .directive-display { border-radius: 16px; padding: 32px; margin: 20px 0; text-align: center; transition: all 0.3s ease; }
+        .directive-name { font-size: 2rem; font-weight: 800; letter-spacing: 4px; margin-bottom: 8px; }
+        .directive-desc { font-size: 0.9rem; opacity: 0.9; }
+        .primitives { margin: 30px 0; }
+        .primitive { display: flex; align-items: center; margin-bottom: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+        .primitive-info { width: 50px; flex-shrink: 0; }
+        .primitive-symbol { font-size: 1.5rem; font-weight: 700; }
+        .primitive-name { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; }
+        .primitive-slider { flex: 1; margin: 0 16px; }
+        .slider { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px; background: var(--border); outline: none; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--text); cursor: pointer; }
+        .primitive-value { width: 40px; text-align: center; font-size: 1.5rem; font-weight: 700; font-family: 'SF Mono', monospace; }
+        .actions { display: flex; gap: 12px; margin: 24px 0; }
+        .btn { flex: 1; padding: 16px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+        .btn-primary { background: var(--execute); color: var(--bg); }
+        .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        .btn:active { transform: scale(0.98); }
+        .history-section { margin-top: 40px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-title { font-size: 1rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; }
+        .clear-btn { font-size: 0.75rem; color: var(--halt); background: none; border: none; cursor: pointer; }
+        .history-list { display: flex; flex-direction: column; gap: 8px; }
+        .history-item { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+        .history-time { width: 60px; font-size: 0.75rem; color: var(--text-dim); }
+        .history-state { flex: 1; font-family: 'SF Mono', monospace; font-size: 0.9rem; letter-spacing: 2px; }
+        .history-seked { width: 50px; font-family: 'SF Mono', monospace; font-size: 0.85rem; text-align: center; }
+        .history-directive { width: 40px; text-align: center; font-weight: 700; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; }
+        .directive-HALT { background: var(--halt); color: white; }
+        .directive-WAIT { background: var(--wait); color: black; }
+        .directive-STABILIZE { background: var(--stabilize); color: black; }
+        .directive-CLARIFY { background: var(--clarify); color: black; }
+        .directive-FORTIFY { background: var(--fortify); color: white; }
+        .directive-GRIND { background: var(--grind); color: white; }
+        .directive-EXECUTE { background: var(--execute); color: white; }
+        .directive-EXPAND { background: var(--expand); color: black; }
+        .directive-SCALE_BACK { background: var(--scaleback); color: white; }
+        .empty-history { text-align: center; padding: 40px; color: var(--text-dim); }
+        .tabs { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; padding: 8px 0; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+        .tab { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px; background: none; border: none; color: var(--text-dim); cursor: pointer; }
+        .tab.active { color: var(--execute); }
+        .tab-icon { font-size: 1.5rem; margin-bottom: 4px; }
+        .tab-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
+        .view { display: none; }
+        .view.active { display: block; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .stat-value { font-size: 2rem; font-weight: 700; }
+        .stat-sub { font-size: 0.85rem; color: var(--text-dim); margin-top: 4px; }
+        .ref-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .ref-title { font-weight: 700; margin-bottom: 8px; }
+        .ref-content { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; }
+        .formula { background: var(--bg); padding: 12px; border-radius: 8px; font-family: 'SF Mono', monospace; margin: 8px 0; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="view active" id="compile-view">
+            <div class="header"><h1>SEKED</h1><div class="tagline">State Compiler</div></div>
+            <div class="state-display">
+                <div class="state-code" id="state-code">55555</div>
+                <div class="ratios">
+                    <div class="ratio"><div class="ratio-label">SEKED</div><div class="ratio-value" id="seked-value">1.67</div></div>
+                    <div class="ratio"><div class="ratio-label">CI</div><div class="ratio-value" id="ci-value">0.83</div></div>
+                    <div class="ratio"><div class="ratio-label">SI</div><div class="ratio-value" id="si-value">1.00</div></div>
+                </div>
+            </div>
+            <div class="directive-display directive-GRIND" id="directive-display">
+                <div class="directive-name" id="directive-name">GRIND</div>
+                <div class="directive-desc" id="directive-desc">Sustainable slow progress.</div>
+            </div>
+            <div class="primitives">
+                <div class="primitive"><div class="primitive-info"><div class="primitive-symbol">E</div><div class="primitive-name">Energy</div></div><div class="primitive-slider"><input type="range" class="slider" id="slider-e" min="0" max="9" value="5"></div><div class="primitive-value" id="value-e">5</div></div>
+                <div class="primitive"><div class="primitive-info"><div class="primitive-symbol">R</div><div class="primitive-name">Resist</div></div><div class="primitive-slider"><input type="range" class="slider" id="slider-r" min="0" max="9" value="5"></div><div class="primitive-value" id="value-r">5</div></div>
+                <div class="primitive"><div class="primitive-info"><div class="primitive-symbol">C</div><div class="primitive-name">Clarity</div></div><div class="primitive-slider"><input type="range" class="slider" id="slider-c" min="0" max="9" value="5"></div><div class="primitive-value" id="value-c">5</div></div>
+                <div class="primitive"><div class="primitive-info"><div class="primitive-symbol">D</div><div class="primitive-name">Drive</div></div><div class="primitive-slider"><input type="range" class="slider" id="slider-d" min="0" max="9" value="5"></div><div class="primitive-value" id="value-d">5</div></div>
+                <div class="primitive"><div class="primitive-info"><div class="primitive-symbol">S</div><div class="primitive-name">Stable</div></div><div class="primitive-slider"><input type="range" class="slider" id="slider-s" min="0" max="9" value="5"></div><div class="primitive-value" id="value-s">5</div></div>
+            </div>
+            <div class="actions"><button class="btn btn-primary" id="log-btn">LOG STATE</button><button class="btn btn-secondary" id="reset-btn">RESET</button></div>
+        </div>
+        <div class="view" id="history-view">
+            <div class="header"><h1>SEKED</h1><div class="tagline">History</div></div>
+            <div class="history-section"><div class="section-header"><div class="section-title">Logged States</div><button class="clear-btn" id="clear-history">Clear All</button></div><div class="history-list" id="history-list"><div class="empty-history">No states logged yet.</div></div></div>
+        </div>
+        <div class="view" id="stats-view">
+            <div class="header"><h1>SEKED</h1><div class="tagline">Statistics</div></div>
+            <div class="stat-card"><div class="stat-label">Total Logs</div><div class="stat-value" id="stat-total">0</div></div>
+            <div class="stat-card"><div class="stat-label">Average SEKED</div><div class="stat-value" id="stat-avg-seked">—</div><div class="stat-sub" id="stat-avg-zone">No data</div></div>
+            <div class="stat-card"><div class="stat-label">Most Common Directive</div><div class="stat-value" id="stat-common-directive">—</div><div class="stat-sub" id="stat-directive-count">No data</div></div>
+            <div class="stat-card"><div class="stat-label">Current Streak</div><div class="stat-value" id="stat-streak">0</div><div class="stat-sub">consecutive days logged</div></div>
+        </div>
+        <div class="view" id="ref-view">
+            <div class="header"><h1>SEKED</h1><div class="tagline">Reference</div></div>
+            <div class="ref-card"><div class="ref-title">The Formula</div><div class="formula">σ = (E + D) / (R + 1)</div><div class="ref-content">SEKED measures forward force against friction.</div></div>
+            <div class="ref-card"><div class="ref-title">Directives</div><div class="ref-content"><strong>HALT</strong> (σ &lt; 1.0) — Stop. Recover.<br><strong>WAIT</strong> (σ 1-2, foggy) — Pause.<br><strong>STABILIZE</strong> (σ 1-2, weak) — Shore up.<br><strong>GRIND</strong> (σ 1-2, stable) — Slow progress.<br><strong>CLARIFY</strong> (σ 2-4, foggy) — Remove noise.<br><strong>FORTIFY</strong> (σ 2-4, weak) — Build structure.<br><strong>EXECUTE</strong> (σ 2-4, clear) — Build. Ship. Do.<br><strong>EXPAND</strong> (σ &gt; 4, strong) — Scale up.<br><strong>SCALE BACK</strong> (σ &gt; 4, weak) — Reduce.</div></div>
+            <div class="ref-card"><div class="ref-title">Secondary Ratios</div><div class="formula">CI = C / (R + 1)</div><div class="ref-content">Clarity Index — Can you decide? (&lt; 0.5 = fog)</div><div class="formula">SI = S / ((E + D) / 2)</div><div class="ref-content">Structural Integrity — Can you handle it? (&lt; 0.5 = weak)</div></div>
+        </div>
+    </div>
+    <div class="tabs">
+        <button class="tab active" data-view="compile-view"><div class="tab-icon">⚡</div><div class="tab-label">Compile</div></button>
+        <button class="tab" data-view="history-view"><div class="tab-icon">📋</div><div class="tab-label">History</div></button>
+        <button class="tab" data-view="stats-view"><div class="tab-icon">📊</div><div class="tab-label">Stats</div></button>
+        <button class="tab" data-view="ref-view"><div class="tab-icon">📖</div><div class="tab-label">Reference</div></button>
+    </div>
+    <script>
+        const DIRECTIVES = {
+            HALT: { name: 'HALT', code: 'H', desc: 'Stop all non-essential activity. Recover.' },
+            WAIT: { name: 'WAIT', code: 'W', desc: 'Pause action. Monitor for change.' },
+            STABILIZE: { name: 'STABILIZE', code: 'S', desc: 'Reinforce foundation before proceeding.' },
+            CLARIFY: { name: 'CLARIFY', code: 'C', desc: 'Reduce noise. Increase signal.' },
+            FORTIFY: { name: 'FORTIFY', code: 'F', desc: 'Build structural capacity.' },
+            GRIND: { name: 'GRIND', code: 'G', desc: 'Sustainable slow progress.' },
+            EXECUTE: { name: 'EXECUTE', code: 'X', desc: 'All systems green. Build. Ship. Do.' },
+            EXPAND: { name: 'EXPAND', code: 'E', desc: 'High capacity. Scale up.' },
+            SCALE_BACK: { name: 'SCALE BACK', code: 'B', desc: 'Ambition exceeds foundation. Reduce.' }
+        };
+        function computeRatios(e, r, c, d, s) {
+            const seked = (e + d) / (r + 1);
+            const ci = c / (r + 1);
+            const avgForce = (e + d) / 2;
+            const si = avgForce > 0 ? s / avgForce : 0;
+            return { seked: Math.round(seked * 100) / 100, ci: Math.round(ci * 100) / 100, si: Math.round(si * 100) / 100 };
+        }
+        function compile(e, r, c, d, s) {
+            const ratios = computeRatios(e, r, c, d, s);
+            const { seked, ci, si } = ratios;
+            let directive;
+            if (seked < 1.0) directive = DIRECTIVES.HALT;
+            else if (seked >= 6.0) directive = DIRECTIVES.SCALE_BACK;
+            else if (seked >= 4.0) directive = si >= 1.0 ? DIRECTIVES.EXPAND : DIRECTIVES.SCALE_BACK;
+            else if (seked >= 2.0) {
+                if (ci < 0.5) directive = DIRECTIVES.CLARIFY;
+                else if (si < 0.5) directive = DIRECTIVES.FORTIFY;
+                else directive = DIRECTIVES.EXECUTE;
+            } else {
+                if (ci < 0.5) directive = DIRECTIVES.WAIT;
+                else if (si < 0.5) directive = DIRECTIVES.STABILIZE;
+                else directive = DIRECTIVES.GRIND;
+            }
+            return { ratios, directive };
+        }
+        const STORAGE_KEY = 'seked_history';
+        function getHistory() { try { const d = localStorage.getItem(STORAGE_KEY); return d ? JSON.parse(d) : []; } catch { return []; } }
+        function saveHistory(h) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); } catch {} }
+        function addToHistory(entry) { const h = getHistory(); h.unshift(entry); if (h.length > 100) h.pop(); saveHistory(h); return h; }
+        function clearHistoryData() { saveHistory([]); }
+        function updateDisplay() {
+            const e = parseInt(document.getElementById('slider-e').value);
+            const r = parseInt(document.getElementById('slider-r').value);
+            const c = parseInt(document.getElementById('slider-c').value);
+            const d = parseInt(document.getElementById('slider-d').value);
+            const s = parseInt(document.getElementById('slider-s').value);
+            document.getElementById('value-e').textContent = e;
+            document.getElementById('value-r').textContent = r;
+            document.getElementById('value-c').textContent = c;
+            document.getElementById('value-d').textContent = d;
+            document.getElementById('value-s').textContent = s;
+            document.getElementById('state-code').textContent = `${e}${r}${c}${d}${s}`;
+            const result = compile(e, r, c, d, s);
+            document.getElementById('seked-value').textContent = result.ratios.seked.toFixed(2);
+            document.getElementById('ci-value').textContent = result.ratios.ci.toFixed(2);
+            document.getElementById('si-value').textContent = result.ratios.si.toFixed(2);
+            const dd = document.getElementById('directive-display');
+            dd.className = 'directive-display directive-' + result.directive.name.replace(' ', '_');
+            document.getElementById('directive-name').textContent = result.directive.name;
+            document.getElementById('directive-desc').textContent = result.directive.desc;
+        }
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            const h = getHistory();
+            if (h.length === 0) { list.innerHTML = '<div class="empty-history">No states logged yet.</div>'; return; }
+            list.innerHTML = h.map(e => {
+                const d = new Date(e.timestamp);
+                const t = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                return `<div class="history-item"><div class="history-time">${t}</div><div class="history-state">${e.state}</div><div class="history-seked">σ${e.seked.toFixed(1)}</div><div class="history-directive directive-${e.directive.replace(' ', '_')}">${e.code}</div></div>`;
+            }).join('');
+        }
+        function updateStats() {
+            const h = getHistory();
+            document.getElementById('stat-total').textContent = h.length;
+            if (h.length === 0) {
+                document.getElementById('stat-avg-seked').textContent = '—';
+                document.getElementById('stat-avg-zone').textContent = 'No data';
+                document.getElementById('stat-common-directive').textContent = '—';
+                document.getElementById('stat-directive-count').textContent = 'No data';
+                document.getElementById('stat-streak').textContent = '0';
+                return;
+            }
+            const avg = h.reduce((s, x) => s + x.seked, 0) / h.length;
+            document.getElementById('stat-avg-seked').textContent = avg.toFixed(2);
+            let zone = avg >= 4 ? 'SURGE' : avg >= 2 ? 'OPTIMAL' : avg >= 1 ? 'GRIND' : 'COLLAPSE';
+            document.getElementById('stat-avg-zone').textContent = zone + ' zone';
+            const counts = {};
+            h.forEach(x => { counts[x.directive] = (counts[x.directive] || 0) + 1; });
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+            if (sorted.length > 0) {
+                document.getElementById('stat-common-directive').textContent = sorted[0][0];
+                document.getElementById('stat-directive-count').textContent = `${sorted[0][1]} times (${Math.round(sorted[0][1] / h.length * 100)}%)`;
+            }
+            const uniqueDays = [...new Set(h.map(x => new Date(x.timestamp).toDateString()))];
+            let streak = 0;
+            const check = new Date();
+            for (let i = 0; i < 365; i++) {
+                if (uniqueDays.includes(check.toDateString())) { streak++; check.setDate(check.getDate() - 1); }
+                else if (i === 0) { check.setDate(check.getDate() - 1); }
+                else break;
+            }
+            document.getElementById('stat-streak').textContent = streak;
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            ['e', 'r', 'c', 'd', 's'].forEach(p => { document.getElementById(`slider-${p}`).addEventListener('input', updateDisplay); });
+            document.getElementById('log-btn').addEventListener('click', () => {
+                const e = parseInt(document.getElementById('slider-e').value);
+                const r = parseInt(document.getElementById('slider-r').value);
+                const c = parseInt(document.getElementById('slider-c').value);
+                const d = parseInt(document.getElementById('slider-d').value);
+                const s = parseInt(document.getElementById('slider-s').value);
+                const result = compile(e, r, c, d, s);
+                addToHistory({ timestamp: new Date().toISOString(), state: `${e}${r}${c}${d}${s}`, e, r, c, d, s, seked: result.ratios.seked, ci: result.ratios.ci, si: result.ratios.si, directive: result.directive.name, code: result.directive.code });
+                renderHistory(); updateStats();
+                const btn = document.getElementById('log-btn');
+                btn.textContent = 'LOGGED ✓'; btn.style.background = 'var(--expand)';
+                setTimeout(() => { btn.textContent = 'LOG STATE'; btn.style.background = ''; }, 1500);
+            });
+            document.getElementById('reset-btn').addEventListener('click', () => { ['e', 'r', 'c', 'd', 's'].forEach(p => { document.getElementById(`slider-${p}`).value = 5; }); updateDisplay(); });
+            document.getElementById('clear-history').addEventListener('click', () => { if (confirm('Clear all?')) { clearHistoryData(); renderHistory(); updateStats(); } });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                    document.getElementById(tab.dataset.view).classList.add('active');
+                    if (tab.dataset.view === 'history-view') renderHistory();
+                    if (tab.dataset.view === 'stats-view') updateStats();
+                });
+            });
+            updateDisplay(); renderHistory(); updateStats();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEKED Quick Reference Card</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;600;700;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0D1117;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            width: 400px;
+            background: linear-gradient(145deg, #161B22 0%, #0D1117 100%);
+            border-radius: 20px;
+            padding: 32px;
+            border: 1px solid #30363D;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #30363D;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 10px;
+            color: #F0F6FC;
+            margin-bottom: 4px;
+        }
+
+        .tagline {
+            font-size: 0.7rem;
+            color: #8B949E;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 0.65rem;
+            color: #8B949E;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .formula-box {
+            background: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .formula {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.3rem;
+            color: #2A9D8F;
+            font-weight: 700;
+        }
+
+        .primitives {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .primitive {
+            flex: 1;
+            text-align: center;
+            background: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 8px;
+            padding: 10px 4px;
+        }
+
+        .primitive-symbol {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #F0F6FC;
+        }
+
+        .primitive-name {
+            font-size: 0.55rem;
+            color: #8B949E;
+            margin-top: 2px;
+        }
+
+        .directives {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .directive {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+        }
+
+        .directive-code {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 0.75rem;
+            width: 20px;
+        }
+
+        .directive-name {
+            font-weight: 600;
+            color: #F0F6FC;
+        }
+
+        .directive-range {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.7);
+            margin-left: auto;
+        }
+
+        .d-halt { background: rgba(230, 57, 70, 0.2); border-left: 3px solid #E63946; }
+        .d-wait { background: rgba(244, 162, 97, 0.2); border-left: 3px solid #F4A261; }
+        .d-stabilize { background: rgba(233, 196, 106, 0.2); border-left: 3px solid #E9C46A; }
+        .d-grind { background: rgba(108, 117, 125, 0.2); border-left: 3px solid #6C757D; }
+        .d-clarify { background: rgba(168, 218, 220, 0.2); border-left: 3px solid #A8DADC; }
+        .d-fortify { background: rgba(155, 93, 229, 0.2); border-left: 3px solid #9B5DE5; }
+        .d-execute { background: rgba(42, 157, 143, 0.2); border-left: 3px solid #2A9D8F; }
+        .d-expand { background: rgba(0, 245, 212, 0.2); border-left: 3px solid #00F5D4; }
+        .d-scaleback { background: rgba(214, 40, 40, 0.2); border-left: 3px solid #D62828; }
+
+        .zones {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            text-align: center;
+        }
+
+        .zone {
+            padding: 8px 4px;
+            border-radius: 6px;
+            font-size: 0.6rem;
+        }
+
+        .zone-value {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #F0F6FC;
+        }
+
+        .zone-name {
+            color: rgba(255,255,255,0.7);
+            margin-top: 2px;
+        }
+
+        .z-collapse { background: rgba(230, 57, 70, 0.3); }
+        .z-grind { background: rgba(244, 162, 97, 0.3); }
+        .z-optimal { background: rgba(42, 157, 143, 0.3); }
+        .z-surge { background: rgba(0, 245, 212, 0.3); }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #30363D;
+        }
+
+        .footer-text {
+            font-size: 0.6rem;
+            color: #8B949E;
+            letter-spacing: 1px;
+        }
+
+        .protocol {
+            background: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.7rem;
+            line-height: 1.6;
+            color: #8B949E;
+        }
+
+        .protocol strong {
+            color: #F0F6FC;
+        }
+
+        .protocol-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .step-num {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            color: #2A9D8F;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <div class="logo">SEKED</div>
+            <div class="tagline">Ratio-Based State System</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">The Formula</div>
+            <div class="formula-box">
+                <div class="formula">σ = (E + D) / (R + 1)</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Primitives (0-9)</div>
+            <div class="primitives">
+                <div class="primitive">
+                    <div class="primitive-symbol">E</div>
+                    <div class="primitive-name">Energy</div>
+                </div>
+                <div class="primitive">
+                    <div class="primitive-symbol">R</div>
+                    <div class="primitive-name">Resist</div>
+                </div>
+                <div class="primitive">
+                    <div class="primitive-symbol">C</div>
+                    <div class="primitive-name">Clarity</div>
+                </div>
+                <div class="primitive">
+                    <div class="primitive-symbol">D</div>
+                    <div class="primitive-name">Drive</div>
+                </div>
+                <div class="primitive">
+                    <div class="primitive-symbol">S</div>
+                    <div class="primitive-name">Stable</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">SEKED Zones</div>
+            <div class="zones">
+                <div class="zone z-collapse">
+                    <div class="zone-value">&lt;1</div>
+                    <div class="zone-name">Collapse</div>
+                </div>
+                <div class="zone z-grind">
+                    <div class="zone-value">1-2</div>
+                    <div class="zone-name">Grind</div>
+                </div>
+                <div class="zone z-optimal">
+                    <div class="zone-value">2-4</div>
+                    <div class="zone-name">Optimal</div>
+                </div>
+                <div class="zone z-surge">
+                    <div class="zone-value">4+</div>
+                    <div class="zone-name">Surge</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Directives</div>
+            <div class="directives">
+                <div class="directive d-halt">
+                    <span class="directive-code">H</span>
+                    <span class="directive-name">HALT</span>
+                    <span class="directive-range">σ&lt;1</span>
+                </div>
+                <div class="directive d-wait">
+                    <span class="directive-code">W</span>
+                    <span class="directive-name">WAIT</span>
+                    <span class="directive-range">fog</span>
+                </div>
+                <div class="directive d-stabilize">
+                    <span class="directive-code">S</span>
+                    <span class="directive-name">STABILIZE</span>
+                    <span class="directive-range">weak</span>
+                </div>
+                <div class="directive d-grind">
+                    <span class="directive-code">G</span>
+                    <span class="directive-name">GRIND</span>
+                    <span class="directive-range">1-2</span>
+                </div>
+                <div class="directive d-clarify">
+                    <span class="directive-code">C</span>
+                    <span class="directive-name">CLARIFY</span>
+                    <span class="directive-range">fog</span>
+                </div>
+                <div class="directive d-fortify">
+                    <span class="directive-code">F</span>
+                    <span class="directive-name">FORTIFY</span>
+                    <span class="directive-range">weak</span>
+                </div>
+                <div class="directive d-execute">
+                    <span class="directive-code">X</span>
+                    <span class="directive-name">EXECUTE</span>
+                    <span class="directive-range">2-4</span>
+                </div>
+                <div class="directive d-expand">
+                    <span class="directive-code">E</span>
+                    <span class="directive-name">EXPAND</span>
+                    <span class="directive-range">4+</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Daily Protocol</div>
+            <div class="protocol">
+                <div class="protocol-step"><span class="step-num">1</span> Rate E R C D S (0-9)</div>
+                <div class="protocol-step"><span class="step-num">2</span> Compute σ = (E+D)/(R+1)</div>
+                <div class="protocol-step"><span class="step-num">3</span> Read the directive</div>
+                <div class="protocol-step"><span class="step-num">4</span> Execute. No debate.</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-text">Before angles, humans built with ratios.</div>
+        </div>
+    </div>
+</body>
+</html>
