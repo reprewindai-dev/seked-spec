@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEKED — Visual Example</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0D1117 0%, #161B22 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 12px;
+            color: #F0F6FC;
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            font-size: 0.9rem;
+            color: #8B949E;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .example-card {
+            background: #161B22;
+            border: 1px solid #30363D;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .example-title {
+            font-size: 1rem;
+            color: #8B949E;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+        }
+
+        .state-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .primitive {
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+            background: #0D1117;
+            border: 1px solid #30363D;
+            border-radius: 12px;
+            padding: 16px 12px;
+        }
+
+        .primitive-letter {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #F0F6FC;
+            margin-bottom: 4px;
+        }
+
+        .primitive-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2A9D8F;
+            margin-bottom: 4px;
+        }
+
+        .primitive-name {
+            font-size: 0.7rem;
+            color: #8B949E;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .calculation {
+            background: #0D1117;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .formula {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            color: #8B949E;
+            margin-bottom: 16px;
+        }
+
+        .result {
+            font-family: 'Space Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2A9D8F;
+        }
+
+        .result-label {
+            font-size: 0.75rem;
+            color: #8B949E;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+
+        .directive-box {
+            background: linear-gradient(135deg, #2A9D8F 0%, #1a7a6f 100%);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .directive-name {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #F0F6FC;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+        }
+
+        .directive-desc {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: #30363D;
+            font-size: 2rem;
+            margin: 20px 0;
+        }
+
+        .interpretation {
+            background: #161B22;
+            border: 1px solid #30363D;
+            border-radius: 20px;
+            padding: 32px;
+        }
+
+        .interpretation h3 {
+            font-size: 1rem;
+            color: #8B949E;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .meaning {
+            color: #F0F6FC;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .meaning strong {
+            color: #2A9D8F;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #8B949E;
+            font-size: 0.85rem;
+        }
+
+        .footer em {
+            display: block;
+            margin-top: 8px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">SEKED</div>
+            <div class="tagline">Ratio-Based Human Operating Language</div>
+        </div>
+
+        <div class="example-card">
+            <div class="example-title">Example: Tuesday Morning State</div>
+
+            <div class="state-row">
+                <div class="primitive">
+                    <div class="primitive-letter">E</div>
+                    <div class="primitive-value">7</div>
+                    <div class="primitive-name">Energy</div>
+                </div>
+                <div class="primitive">
+                    <div class="primitive-letter">R</div>
+                    <div class="primitive-value">3</div>
+                    <div class="primitive-name">Resistance</div>
+                </div>
+                <div class="primitive">
+                    <div class="primitive-letter">C</div>
+                    <div class="primitive-value">8</div>
+                    <div class="primitive-name">Clarity</div>
+                </div>
+                <div class="primitive">
+                    <div class="primitive-letter">D</div>
+                    <div class="primitive-value">6</div>
+                    <div class="primitive-name">Drive</div>
+                </div>
+                <div class="primitive">
+                    <div class="primitive-letter">S</div>
+                    <div class="primitive-value">7</div>
+                    <div class="primitive-name">Stability</div>
+                </div>
+            </div>
+
+            <div class="calculation">
+                <div class="formula">σ = (E + D) / (R + 1) = (7 + 6) / (3 + 1) = 13 / 4</div>
+                <div class="result">σ = 3.25</div>
+                <div class="result-label">SEKED Ratio — Optimal Zone</div>
+            </div>
+
+            <div class="directive-box">
+                <div class="directive-name">EXECUTE</div>
+                <div class="directive-desc">All systems green. Build. Ship. Do.</div>
+            </div>
+        </div>
+
+        <div class="interpretation">
+            <h3>What This Means</h3>
+            <div class="meaning">
+                <strong>State 73867</strong> compiles to <strong>EXECUTE</strong>.<br><br>
+                Your forward force (Energy + Drive = 13) significantly exceeds your friction (Resistance = 3).<br><br>
+                Your Clarity Index is high (8/4 = 2.0) — you can see clearly.<br><br>
+                Your Structural Integrity is solid (7/6.5 = 1.08) — your foundation can handle the load.<br><br>
+                <strong>Action:</strong> This is not the time to plan or prepare. This is the time to produce. Build. Ship. Do.
+            </div>
+        </div>
+
+        <div class="footer">
+            SEKED v1.0 — A measurement language, not a mood tracker<br>
+            <em>"Before angles, humans built with ratios."</em>
+        </div>
+    </div>
+</body>
+</html>
