@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 Anthony (ShortFormFactory) & Claude (Anthropic)
+Copyright (c) 2026 Anthony (Reprewindai)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,24 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-ADDITIONAL TERMS — SEKED SPECIFICATION IMMUTABILITY
-
-The SEKED v1.0 core specification (primitives, ratios, directives, thresholds,
-and compiler decision tree) is declared IMMUTABLE per THE_SEKED_DECLARATION.md.
-
-You may freely:
-- Implement SEKED in any language or platform
-- Build applications, tools, and services using SEKED
-- Create extensions that build upon SEKED
-- Translate documentation into any language
-- Use SEKED for commercial or non-commercial purposes
-
-You may NOT:
-- Modify the core specification and call it "SEKED"
-- Alter primitives, ratios, directives, or thresholds and claim SEKED compatibility
-- Create derivative specifications using the SEKED name
-
-Extensions must translate INTO SEKED, not modify it.
