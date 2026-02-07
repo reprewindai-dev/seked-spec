@@ -71,6 +71,8 @@ This hash represents the immutable SEKED v1.0 specification.
 **Status:** LOCKED — This specification is immutable
 **Date:** February 4, 2026
 
+**Certified Implementation** — Validated by 4 independent reviews (0 internal defects), exhaustive test suite ([`SEKED_TEST_SUITE.html`](SEKED_TEST_SUITE.html)), and formal validation log ([`VALIDATION_LOG.md`](VALIDATION_LOG.md)).
+
 The following elements will not change:
 
 - Five primitives (E, R, C, D, S)
@@ -123,9 +125,9 @@ SEKED applies the same principle to human operational state.
 
 ## License
 
-Open specification for implementation.
-Core specification is immutable and may not be modified.
-Extensions must translate INTO SEKED, not modify it.
+MIT. See [LICENSE](LICENSE).
+
+SEKED is an open measurement language. The specification is MIT-licensed; implementations may impose additional terms.
 
 ---
 
